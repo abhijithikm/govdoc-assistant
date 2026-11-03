@@ -1,0 +1,175 @@
+GOVDOC — QUICK REFERENCE
+========================
+
+Purpose
+-------
+Use a browser chat page to ask questions about government PDF documents. FastAPI serves
+the page and API. The program extracts text locally, selects matching
+passages, sends those passages to NVIDIA's chat completion API, and asks the
+model to answer with PDF filename and page citations.
+
+Files
+-----
+app.py             FastAPI server, chat API, PDF uploads and retrieval logic
+static/index.html  Browser chat interface
+data/              Put PDF documents here (not committed to Git)
+.env               Local API configuration (keep private; not committed)
+.env.example       Safe configuration template
+requirements.txt   Python package list
+
+Setup (Linux/macOS)
+-------------------
+1. Open a terminal in this project directory.
+2. Create and activate a virtual environment:
+     python3 -m venv .venv
+     source .venv/bin/activate
+3. Install dependencies:
+     pip install -r requirements.txt
+   Install local OCR and PDF rendering tools on Ubuntu/Debian:
+     sudo apt-get install tesseract-ocr tesseract-ocr-mal tesseract-ocr-eng poppler-utils
+   These are operating-system packages, not pip requirements. The app also detects
+   a project-local Tesseract installation under .local/ocr/usr/.
+4. Copy .env.example to .env and set NVIDIA_API_KEY to a valid key from
+   NVIDIA Build. The default model is nvidia/nemotron-3.5-super-vl-120b-a12b; set NVIDIA_MODEL
+   to another model enabled for the key if needed.
+5. Copy searchable or scanned PDF files into data/.
+6. Start the web app:
+     uvicorn app:app --reload
+7. Open this address in your browser:
+     http://127.0.0.1:8000
+
+Use
+---
+Type a question and press Enter. Answers include citations such as
+[biology-notes.pdf, p. 4]. Use Add PDF documents to upload PDFs through the
+browser, or place them in data/ and click Refresh library. Stop the server
+with Ctrl+C in the terminal.
+
+Server deployment and upgrades (Ubuntu/Debian)
+---------------------------------------------
+Use this checklist when updating the server with the Malayalam OCR fix.
+
+1. Back up the server's .env and entire data/ directory, including hidden cache
+   files. Preserve the server's existing documents and configuration when copying
+   the updated application. Do not overwrite them with development sample data.
+   Deploy app.py, requirements.txt, static/, documentation.txt, test_ocr.py,
+   test_chat.py and test_progress.py.
+
+2. Install OCR dependencies on the server itself:
+     sudo apt-get update
+     sudo apt-get install -y tesseract-ocr tesseract-ocr-mal tesseract-ocr-eng poppler-utils
+   Installing requirements.txt alone does not install these tools or language data.
+   The development machine uses a project-local installation in .local/ocr/;
+   that directory is ignored by Git and is not automatically deployed. Prefer
+   the system packages above on the server. A project-local installation takes
+   precedence if .local/ocr/usr/bin/tesseract exists; do not copy binaries from a
+   machine with a different operating system or CPU architecture.
+
+3. From the server's application directory, update Python dependencies and check
+   the OCR installation using the same account/environment as the application:
+     .venv/bin/python -m pip install -r requirements.txt
+     tesseract --list-langs
+     pdftoppm -v
+     .venv/bin/python -m unittest -v test_ocr test_chat test_progress
+   The language list must include both mal and eng. If either is missing, local
+   OCR is skipped and the app attempts remote vision OCR instead. Ensure the
+   service account can execute these tools and write to data/ and its temporary
+   directory. Keep NVIDIA_API_KEY and NVIDIA_MODEL configured in the server .env:
+   Malayalam-to-English translation still uses the NVIDIA API after local OCR.
+
+4. Stop the running application using your existing service manager, then rebuild
+   the index from the server's PDFs with the updated code:
+     .venv/bin/python -u -c 'import app; print("Indexed passages:", len(app.load_passages()))'
+   Run this from the application directory, as the service account, with network
+   access to the configured NVIDIA API. Allow time for OCR and translation of all
+   documents. Inspect output for rendering, OCR or translation failures. Failed
+   translations retain Malayalam text and can be retried with another rebuild.
+   This writes data/english_search_index.json and updates both hidden caches.
+   Old OCR cache entries are bypassed by the new versioned keys; no cache deletion
+   is required for this upgrade. Explicitly rebuilding also replaces incomplete
+   search indexes copied from earlier deployments.
+
+5. Start the application again using your existing service manager so it loads
+   the rebuilt index. The service name depends on your deployment. The --reload
+   command in the setup section is for development, not a production service.
+   Check /api/documents and ask a question about a known scanned document. For
+   Circular-KSMART.pdf, verify that all six pages have indexed passages and that
+   a KSMART/GSPARK question retrieves that document. Compare important extracted
+   details with the original PDF; signatures and scan noise may still cause errors.
+
+For later document updates, Refresh library (POST /api/reload) rebuilds the index
+and updates the running process. The browser requests ?progress=true on upload and
+reload endpoints to receive newline-delimited JSON progress events. Without that
+parameter, the endpoints retain their original single JSON response.
+
+Upload and extraction progress
+------------------------------
+- Upload shows the actual bytes transferred. Extraction then shows the current
+  stage and page count: extracting, OCR, translating, indexing, and saving.
+  Translation also reports the current chunk. The page bar advances only when
+  a page finishes; it is not a time estimate. Refresh reports the document number.
+- Processing runs in a background thread. Existing indexed documents remain
+  available for chat. A per-process lock rejects concurrent indexing with HTTP 409.
+  Deploy this file-backed application with ONE worker (for example:
+  uvicorn app:app --host 127.0.0.1 --port 8000 --workers 1).
+  Multiple workers require shared job coordination and shared index state, which
+  this version does not implement.
+- For reverse proxies, disable response buffering on /api/documents and /api/reload
+  (Nginx: proxy_buffering off;). The app also sends X-Accel-Buffering: no and a
+  heartbeat every 10 seconds. Allow long-running uploads/OCR requests, set the
+  proxy request-body limit above 25 MB to allow multipart overhead, and configure
+  proxy read timeouts for long AI responses (for example, 180 seconds).
+- Blank/unreadable pages and unavailable translations appear as warnings. Zero
+  searchable passages or a failed index save is an error, never "Ready to search".
+  The search index is replaced atomically to preserve the last saved index if a
+  write fails. On connection loss, processing may continue on the server. Refresh
+  the collection before retrying; progress streams are not resumable after restart.
+- After updating static/index.html, hard-refresh the browser to load the new UI.
+
+NVIDIA answers and display
+--------------------------
+- NVIDIA_MODEL selects nvidia/nemotron-3.5-super-vl-120b-a12b by default. This model
+  supports text and image input. Chat uses direct-answer mode (enable_thinking=false),
+  a 2400-token output budget, and one SDK retry for transient service errors.
+  Official model configuration reference:
+  https://docs.nvidia.com/nim/large-language-models/2.0.13/get-started/advanced/get-started-nemotron-3.5-super-vl.html
+- Model failures log their exception type and HTTP status, without API keys or
+  document contents. A failed or truncated answer displays short, clearly labelled
+  source excerpts. These excerpts are not presented as an AI-generated summary.
+- Answers render headings, numbered/bulleted lists, bold text, inline code, code
+  blocks, simple Markdown tables and HTTP(S) links. Raw HTML is displayed as text.
+  Source references are grouped by document, with page numbers in a single chip.
+
+Notes and limitations
+---------------------
+- The reference collection lists the newest uploads first, using PDF modification
+  timestamps. Re-uploading a file moves it to the top. Files copied manually use
+  their filesystem modification time; preserve timestamps when migrating servers
+  to preserve this order. SQLite is not required for this ordering.
+- Retrieval ranks filename and passage-content matches together, so a shared term
+  such as KSMART does not select only the first document in the library. K-SMART
+  is normalized to KSMART for search. Historical status documents describe their
+  dated status, not verified present-day service availability.
+- Scanned/image-only PDFs are OCRed automatically before the app indexes their text.
+- The app automatically OCRs scanned PDF pages. It uses local Tesseract with
+  both Malayalam (`mal`) and English (`eng`) support when available; otherwise it uses
+  the configured vision AI service. OCR text is cached in `data/.ocr_text_cache.json`.
+  Pages are rendered as 300-DPI PNGs. Cache keys include the OCR revision and engine
+  so older transcriptions are not reused after this OCR upgrade. Obvious repetitive
+  OCR output and truncated vision results are rejected; this is not a guarantee of
+  transcription accuracy. Review names, dates and amounts against the source.
+- Malayalam PDFs with selectable text are translated to English when they are indexed.
+  Translations are cached in `data/.english_translation_cache.json`, so unchanged
+  passages are not translated again. The English passages used for search are stored
+  in `data/english_search_index.json` whenever documents are uploaded or refreshed.
+  Users can continue to ask questions in English.
+  Scanned Malayalam PDFs still need OCR with Malayalam language support first.
+- Retrieval uses simple word overlap and is suitable as a starter project;
+  semantic embeddings can improve search for larger collections.
+- Malayalam passages are sent to NVIDIA for translation; page images are sent
+  when remote vision OCR is used. Selected excerpts are sent for chat answers.
+  Do not use documents
+  unless you are allowed to send their content to that service.
+- The model can still make mistakes. Check the cited source page.
+- The API key is read from .env and must never be committed or pasted into
+  source code. If a key has been exposed, revoke it and use a replacement.

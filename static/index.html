@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GovDoc | Government Document Assistant</title>
+  <style>
+    :root { color-scheme:light; --navy:#102a43; --ink:#243b53; --muted:#627d98; --line:#d9e2ec; --blue:#1261a6; --blue-dark:#0b4b82; --blue-soft:#eaf3fa; --surface:#fff; --canvas:#f3f7fa; --success:#19734c; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; font:14px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; color:var(--ink); background:linear-gradient(135deg,#e9f1f7 0,#f7f9fb 48%,#e9f2f7 100%); }
+    .app { max-width:1440px; height:100dvh; margin:auto; padding:24px; display:grid; grid-template-columns:290px minmax(0,1fr); gap:20px; }
+    aside,.chat { background:var(--surface); border:1px solid var(--line); border-radius:18px; box-shadow:0 18px 46px rgba(27,57,87,.10); }
+    aside { padding:24px 20px 20px; display:flex; flex-direction:column; gap:20px; min-height:0; overflow:auto; }
+    .brand { display:flex; gap:12px; align-items:center; padding-bottom:20px; border-bottom:1px solid var(--line); }
+    .logo { display:grid; place-items:center; width:43px; height:43px; border-radius:10px; background:var(--navy); color:#fff; font-size:13px; font-weight:800; letter-spacing:.08em; }
+    h1 { color:var(--navy); font-size:18px; margin:0; letter-spacing:-.35px; } .sub { color:var(--muted); font-size:12px; margin-top:2px; }
+    .section-title { display:flex; justify-content:space-between; align-items:center; font-size:11px; text-transform:uppercase; letter-spacing:.11em; font-weight:800; color:#526d82; margin-bottom:11px; }
+    #doc-count { display:grid; place-items:center; min-width:23px; height:23px; border-radius:99px; background:var(--blue-soft); color:var(--blue-dark); font-size:11px; }
+    .doc-list { display:flex; flex-direction:column; gap:7px; max-height:42vh; overflow:auto; padding-right:2px; }
+    .doc { position:relative; padding:10px 10px 10px 28px; border:1px solid transparent; border-radius:8px; background:#f7fafc; color:#486581; font-size:13px; overflow-wrap:anywhere; }
+    .doc::before { content:'›'; position:absolute; left:11px; color:var(--blue); font-weight:800; }
+    .empty { color:var(--muted); font-size:13px; padding:12px 4px; }
+    .upload { border:1px dashed #9fb8ca; border-radius:10px; padding:13px 12px; text-align:center; color:var(--blue-dark); font-size:13px; font-weight:700; cursor:pointer; background:#f7fbfe; transition:.18s ease; }
+    .upload:hover { border-color:var(--blue); background:var(--blue-soft); transform:translateY(-1px); }
+    .upload input { display:none; }
+    button { border:0; border-radius:8px; padding:10px 14px; font:inherit; font-weight:700; cursor:pointer; transition:.18s ease; }
+    .secondary { width:100%; background:#eaf1f6; color:#36566f; }
+    .secondary:hover { background:#dce9f2; color:var(--navy); }
+    .status { color:var(--muted); font-size:12px; min-height:18px; }
+    .chat { min-height:0; display:flex; flex-direction:column; min-width:0; overflow:hidden; }
+    .topbar { padding:19px 28px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; background:#fff; }
+    .topbar strong { color:var(--navy); font-size:16px; letter-spacing:-.2px; } .online { color:var(--success); font-size:12px; font-weight:700; }
+    .messages { flex:1; min-height:0; overflow:auto; padding:28px clamp(16px,3vw,40px); display:flex; flex-direction:column; gap:24px; background:#f8fafc; }
+    .welcome { margin:auto; max-width:620px; text-align:center; color:var(--muted); }
+    .welcome .big { display:grid; place-items:center; width:58px; height:58px; margin:0 auto 17px; border-radius:16px; background:var(--blue-soft); color:var(--blue-dark); font-size:32px; font-weight:300; } .welcome h2 { color:var(--navy); font-size:27px; letter-spacing:-.7px; margin:0 0 8px; }
+    .welcome p { margin:0; }
+    .suggestions { display:flex; flex-wrap:wrap; justify-content:center; gap:9px; margin-top:22px; }
+    .suggestion { padding:8px 12px; border:1px solid #c9dce9; border-radius:7px; background:#fff; color:var(--blue-dark); font-size:12px; font-weight:700; box-shadow:0 2px 4px #102a4308; }
+    .suggestion:hover { border-color:var(--blue); background:var(--blue-soft); }
+    .message { display:flex; gap:11px; width:100%; min-width:0; align-self:flex-start; }
+    .message.user { align-self:flex-end; flex-direction:row-reverse; width:auto; max-width:90%; }
+    .avatar { width:31px; height:31px; flex:none; border-radius:50%; display:grid; place-items:center; background:var(--navy); color:#fff; font-size:10px; font-weight:800; }
+    .user .avatar { background:#dceee5; color:var(--success); }
+    .bubble { padding:18px 20px; min-width:0; max-width:100%; flex:1; border:1px solid var(--line); border-radius:3px 12px 12px; background:#fff; box-shadow:0 3px 10px rgba(27,57,87,.05); overflow-wrap:anywhere; line-height:1.75; }
+    .user .bubble { border:0; border-radius:12px 3px 12px 12px; background:var(--navy); color:#fff; box-shadow:none; }
+    .bubble p { margin:0 0 10px; } .bubble p:last-child { margin-bottom:0; }
+    .bubble ul,.bubble ol { margin:12px 0; padding-left:24px; } .bubble li { padding-left:3px; } .bubble li + li { margin-top:8px; }
+    .bubble h2,.bubble h3,.bubble h4 { color:var(--navy); line-height:1.35; margin:20px 0 10px; font-size:16px; }
+    .bubble > :first-child { margin-top:0; }
+    .bubble code { background:#edf2f7; padding:2px 5px; border-radius:4px; font-size:12px; }
+    .bubble pre { overflow:auto; padding:12px; background:#edf2f7; border-radius:8px; white-space:pre; }
+    .bubble pre code { padding:0; }
+    .table-wrap { overflow-x:auto; margin:14px 0; }
+    .bubble table { width:100%; border-collapse:collapse; font-size:13px; }
+    .bubble th,.bubble td { text-align:left; padding:9px 12px; border:1px solid var(--line); vertical-align:top; }
+    .bubble th { background:var(--blue-soft); color:var(--navy); }
+    .bubble a { color:var(--blue); }
+    .source-chip { display:inline-block; margin:5px 6px 0 0; padding:5px 9px; background:#edf4fa; border-radius:6px; font-weight:500; }
+    .progress-panel { background:#f5f9fc; border:1px solid var(--line); padding:12px; border-radius:10px; font-size:12px; }
+    .progress-panel[hidden] { display:none; }
+    .progress-panel strong { display:block; overflow-wrap:anywhere; color:var(--navy); margin-bottom:6px; }
+    .progress-panel progress { width:100%; height:8px; accent-color:var(--blue); display:block; margin:10px 0; }
+    .progress-panel.error { border-color:#ce6767; }
+    .progress-panel ul { padding-left:16px; color:#8c5510; max-height:100px; overflow:auto; }
+    button:disabled,.upload:has(input:disabled) { opacity:.55; cursor:wait; }
+    .user .bubble { white-space:pre-wrap; }
+    .citations { color:#527087; font-size:11px; font-weight:650; line-height:1.55; margin-top:9px; padding-top:8px; border-top:1px solid #e7eef3; overflow-wrap:anywhere; }
+    .composer-wrap { padding:17px clamp(24px,5vw,76px) 21px; border-top:1px solid var(--line); background:#fff; }
+    .composer { display:flex; gap:10px; align-items:flex-end; border:1px solid #b7c9d8; border-radius:10px; padding:6px 6px 6px 10px; box-shadow:0 4px 13px rgba(27,57,87,.06); transition:border .18s ease,box-shadow .18s ease; }
+    .composer:focus-within { border-color:var(--blue); box-shadow:0 0 0 3px #1261a61c; }
+    textarea { resize:none; flex:1; border:0; outline:0; padding:9px 6px; font:inherit; color:var(--ink); max-height:140px; min-height:42px; }
+    .send { background:var(--blue); color:white; min-width:78px; height:42px; } .send:hover { background:var(--blue-dark); } .send:disabled { opacity:.55; cursor:wait; }
+    .hint { text-align:center; color:#829ab1; font-size:11px; padding-top:9px; }
+    @media(max-width:800px) { .app { padding:0; display:flex; flex-direction:column; gap:0; } aside { border-radius:0; border-width:0 0 1px; padding:12px 16px; gap:10px; max-height:42dvh; flex-shrink:0; } .brand { display:none; } .section-title { margin:0; } .doc-list { max-height:60px; flex-direction:row; } .doc { white-space:nowrap; } .upload { padding:9px; } .aside-bottom { display:none; } .chat { border:0; border-radius:0; min-height:0; flex:1; } .topbar { padding:12px 16px; } .topbar strong { font-size:13px; } .messages { padding:16px 10px; } .composer-wrap { padding:12px 16px 15px; } .bubble { padding:13px; } .avatar { display:none; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside>
+      <div class="brand"><div class="logo">GD</div><div><h1>GovDoc</h1><div class="sub">Government document assistance</div></div></div>
+      <div>
+        <div class="section-title"><span>Reference collection</span><span id="doc-count">0</span></div>
+        <div class="doc-list" id="documents"><div class="empty">No reference materials yet</div></div>
+      </div>
+      <label class="upload">Add reference document<input id="file-input" type="file" accept="application/pdf,.pdf" multiple></label>
+      <div class="progress-panel" id="upload-progress" hidden aria-live="polite">
+        <strong id="progress-file"></strong>
+        <div class="status" id="upload-status"></div>
+        <progress id="progress-bar" max="100" aria-label="Document processing progress"></progress>
+        <div id="progress-detail"></div>
+        <ul id="progress-warnings" hidden></ul>
+      </div>
+      <div class="aside-bottom" style="margin-top:auto">
+        <button class="secondary" id="reload">Refresh documents</button>
+        <div class="sub" style="margin-top:14px">Document-based answers include source references.</div>
+      </div>
+    </aside>
+    <main class="chat">
+      <header class="topbar"><strong>Government Document Assistant</strong><span class="online">● &nbsp;Ready</span></header>
+      <section class="messages" id="messages" aria-live="polite">
+        <div class="welcome" id="welcome"><div class="big">⌁</div><h2>How can we assist?</h2><p>Ask a general question or search the document collection for a source-referenced answer.</p><div class="suggestions" aria-label="Example questions"><button class="suggestion" type="button" data-question="Give me a simple productivity tip.">General assistance</button><button class="suggestion" type="button" data-question="What information should I prepare before applying for a public service?">Application preparation</button><button class="suggestion" type="button" data-question="What details make a public-records request easier to process?">Records requests</button><button class="suggestion" type="button" data-question="What should a household emergency plan include?">Emergency planning</button></div></div>
+      </section>
+      <div class="composer-wrap">
+        <form class="composer" id="chat-form"><textarea id="question" rows="1" placeholder="Enter a question or document-related request…" required></textarea><button class="send" id="send" type="submit">Send</button></form>
+        <div class="hint">Answers based on reference documents include source citations.</div>
+      </div>
+    </main>
+  </div>
+<script>
+  const messagesEl = document.getElementById('messages');
+  const history = [];
+  function appendInlineMarkdown(element, text) {
+    const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*|\[[^\]]+\]\(https?:\/\/[^\s)]+\))/g);
+    for (const part of parts) {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        const strong = document.createElement('strong'); strong.textContent = part.slice(2, -2); element.append(strong);
+      } else if (part.startsWith('`') && part.endsWith('`')) {
+        const code=document.createElement('code'); code.textContent=part.slice(1,-1); element.append(code);
+      } else if (part.startsWith('*') && part.endsWith('*')) {
+        const em=document.createElement('em'); em.textContent=part.slice(1,-1); element.append(em);
+      } else if (/^\[[^\]]+\]\(https?:\/\//.test(part)) {
+        const match=part.match(/^\[([^\]]+)\]\((.+)\)$/); const link=document.createElement('a');
+        link.textContent=match[1]; link.href=match[2]; link.target='_blank'; link.rel='noopener noreferrer'; element.append(link);
+      } else {
+        element.append(document.createTextNode(part));
+      }
+    }
+  }
+  function renderMessage(body, role, text) {
+    if (role === 'user') { body.textContent = text; return; }
+    const lines = text.split('\n'); let list = null; let paragraph=[];
+    const flushList = () => { if (list) { body.append(list); list = null; } };
+    const flushParagraph = () => { if(paragraph.length) {const p=document.createElement('p');appendInlineMarkdown(p,paragraph.join(' '));body.append(p);paragraph=[];} };
+    const cells = line => line.trim().replace(/^\|/,'').replace(/\|$/,'').split('|').map(cell=>cell.trim());
+    for (let i=0;i<lines.length;i++) {
+      const line = lines[i].trim();
+      if (line.startsWith('```')) {
+        flushParagraph();flushList();const code=[];
+        while(++i<lines.length && !lines[i].trim().startsWith('```')) code.push(lines[i]);
+        const pre=document.createElement('pre');const el=document.createElement('code');el.textContent=code.join('\n');pre.append(el);body.append(pre);continue;
+      }
+      if (line.includes('|') && i+1<lines.length && cells(lines[i+1]).every(cell=>/^:?-{3,}:?$/.test(cell))) {
+        flushParagraph();flushList();const wrap=document.createElement('div');wrap.className='table-wrap';
+        const table=document.createElement('table');const head=document.createElement('thead');const row=document.createElement('tr');
+        for(const cell of cells(line)){const th=document.createElement('th');th.scope='col';appendInlineMarkdown(th,cell);row.append(th);}head.append(row);table.append(head);
+        const tbody=document.createElement('tbody');i++;
+        while(i+1<lines.length && lines[i+1].includes('|')) {const tr=document.createElement('tr');for(const cell of cells(lines[++i])){const td=document.createElement('td');appendInlineMarkdown(td,cell);tr.append(td);}tbody.append(tr);}
+        table.append(tbody);wrap.append(table);body.append(wrap);continue;
+      }
+      const heading=line.match(/^#{1,6}\s+(.+)/);
+      if(heading){flushParagraph();flushList();const h=document.createElement('h3');appendInlineMarkdown(h,heading[1]);body.append(h);continue;}
+      const bullet = line.match(/^(?:([-*•])|\d+[.)])\s+(.+)/);
+      if (bullet) {
+        flushParagraph();const type=bullet[1]?'ul':'ol';
+        if(list && list.tagName.toLowerCase()!==type) flushList();
+        if (!list) {list = document.createElement(type);if(type==='ol')list.start=parseInt(line,10);}
+        const item = document.createElement('li'); appendInlineMarkdown(item, bullet[2]); list.append(item); continue;
+      }
+      if (!line) {flushParagraph();if(list && !/^\s*(?:[-*•]|\d+[.)])\s+/.test(lines[i+1]||''))flushList();continue;}
+      flushList();paragraph.push(line);
+    }
+    flushParagraph();flushList();
+  }
+  function addMessage(role, text, citations=[]) {
+    document.getElementById('welcome')?.remove();
+    const row = document.createElement('div'); row.className = `message ${role}`;
+    const avatar = document.createElement('div'); avatar.className = 'avatar'; avatar.textContent = role === 'user' ? 'You' : '✦';
+    const body = document.createElement('div'); body.className = 'bubble'; renderMessage(body, role, text);
+    if (citations.length) {
+      const refs=document.createElement('div');refs.className='citations';const label=document.createElement('div');label.textContent='Sources';refs.append(label);
+      const grouped=new Map();for(const c of citations){if(!grouped.has(c.source))grouped.set(c.source,new Set());grouped.get(c.source).add(c.page);}
+      for(const [source,pages] of grouped){const chip=document.createElement('span');chip.className='source-chip';chip.textContent=`${source} · pp. ${[...pages].sort((a,b)=>a-b).join(', ')}`;refs.append(chip);}body.append(refs);
+    }
+    row.append(avatar,body); messagesEl.appendChild(row); messagesEl.scrollTop=messagesEl.scrollHeight; return row;
+  }
+  async function refreshDocuments() {
+    const res = await fetch('/api/documents'); const data = await res.json();
+    const box = document.getElementById('documents'); box.replaceChildren();
+    document.getElementById('doc-count').textContent = data.documents.length;
+    if (!data.documents.length) { const empty=document.createElement('div'); empty.className='empty'; empty.textContent='No reference materials yet'; box.append(empty); }
+    else if (!data.passages) { const empty=document.createElement('div'); empty.className='empty'; empty.textContent='Reference materials found, but their text could not be read.'; box.append(empty); }
+    document.querySelector('.online').textContent = data.passages ? '●  Documents ready' : '●  No documents indexed';
+    data.documents.forEach(name => { const item=document.createElement('div'); item.className='doc'; item.textContent=name.replace(/\.pdf$/i,''); box.append(item); });
+  }
+  document.getElementById('chat-form').addEventListener('submit', async event => {
+    event.preventDefault(); const input=document.getElementById('question'); const question=input.value.trim(); if(!question) return;
+    addMessage('user',question); input.value=''; input.style.height='auto';
+    const send=document.getElementById('send'); send.disabled=true; send.textContent='…';
+    const pending=addMessage('assistant','Thinking…');
+    try {
+      const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,history:history.slice(-12)})});
+      const data=await res.json(); if(!res.ok) throw new Error(data.detail || 'Request failed');
+      pending.remove(); addMessage('assistant',data.answer,data.citations||[]);
+      history.push({role:'user',content:question},{role:'assistant',content:data.answer});
+    } catch(error) { pending.remove(); addMessage('assistant',`Sorry, ${error.message}`); }
+    finally { send.disabled=false; send.textContent='Send'; input.focus(); }
+  });
+  document.getElementById('question').addEventListener('input',event=>{event.target.style.height='auto';event.target.style.height=Math.min(event.target.scrollHeight,140)+'px';});
+  document.getElementById('question').addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();document.getElementById('chat-form').requestSubmit();}});
+  messagesEl.addEventListener('click', event => {
+    const suggestion = event.target.closest('[data-question]');
+    if (!suggestion) return;
+    const input = document.getElementById('question'); input.value = suggestion.dataset.question; input.focus();
+    document.getElementById('chat-form').requestSubmit();
+  });
+  const progressPanel=document.getElementById('upload-progress');
+  const progressBar=document.getElementById('progress-bar');
+  const uploadStatus=document.getElementById('upload-status');
+  const progressDetail=document.getElementById('progress-detail');
+  function setIndexingBusy(busy) {
+    document.getElementById('file-input').disabled=busy;
+    document.getElementById('reload').disabled=busy;
+    progressPanel.setAttribute('aria-busy',String(busy));
+  }
+  function startProgress(name) {
+    progressPanel.hidden=false;progressPanel.classList.remove('error');
+    document.getElementById('progress-file').textContent=name;
+    uploadStatus.textContent='Preparing…';progressDetail.textContent='';progressBar.removeAttribute('value');
+    const warnings=document.getElementById('progress-warnings');warnings.replaceChildren();warnings.hidden=true;
+  }
+  function showProgress(event) {
+    if(event.stage==='heartbeat')return;
+    if(event.file)document.getElementById('progress-file').textContent=event.file;
+    if(event.stage==='warning') {
+      const warnings=document.getElementById('progress-warnings');warnings.hidden=false;
+      const item=document.createElement('li');item.textContent=`${event.file || ''}${event.page?' · page '+event.page:''}: ${event.message}`;warnings.append(item);return;
+    }
+    const labels={uploaded:'Upload complete · preparing extraction',document:'Reading document',extracting:'Extracting text',ocr:'Recognizing scanned text (OCR)',translating:'Translating to English',indexing:'Building searchable passages',page_complete:'Page indexed',saving:'Saving search index',complete:'Ready to search',error:'Processing failed'};
+    uploadStatus.textContent=labels[event.stage]||event.stage;
+    if(event.pages){progressBar.max=event.pages;progressBar.value=event.stage==='page_complete'?event.page:event.page-1;progressDetail.textContent=`Page ${event.page} of ${event.pages}${event.chunks?' · chunk '+event.chunk+' of '+event.chunks:''}`;}
+    else if(event.stage==='document'){progressBar.removeAttribute('value');progressDetail.textContent=`Document ${event.document} of ${event.documents}`;}
+    else if(event.stage==='saving' || event.stage==='uploaded'){progressBar.removeAttribute('value');progressDetail.textContent='';}
+    else if(event.stage==='complete'){progressBar.max=1;progressBar.value=1;progressDetail.textContent=`${event.indexed_passages ?? event.passages} searchable passages${event.warnings?' · '+event.warnings+' warning(s); review below':''}`;}
+    else if(event.stage==='error'){progressPanel.classList.add('error');progressDetail.textContent=event.message;progressBar.max=1;progressBar.value=0;}
+  }
+  function indexRequest(url,form=null) {
+    return new Promise((resolve,reject)=>{
+      const xhr=new XMLHttpRequest();let offset=0;let pending='';let terminal=null;
+      xhr.open('POST',url);xhr.setRequestHeader('Accept','application/x-ndjson');
+      if(form){xhr.upload.onprogress=e=>{if(e.lengthComputable){progressBar.max=e.total;progressBar.value=e.loaded;uploadStatus.textContent=`Uploading · ${Math.round(e.loaded/e.total*100)}%`;}};
+        xhr.upload.onload=()=>{uploadStatus.textContent='Upload sent · waiting for extraction';progressBar.removeAttribute('value');};}
+      const consume=()=>{
+        pending+=xhr.responseText.slice(offset);offset=xhr.responseText.length;
+        let end;while((end=pending.indexOf('\n'))>=0){const line=pending.slice(0,end);pending=pending.slice(end+1);if(!line.trim())continue;const event=JSON.parse(line);showProgress(event);if(['complete','error'].includes(event.stage))terminal=event;}
+      };
+      xhr.onprogress=()=>{if(xhr.status>=200&&xhr.status<300){try{consume();}catch{reject(new Error('Could not read processing progress. Refresh the collection to check the result.'));xhr.abort();}}};
+      xhr.onload=()=>{
+        if(xhr.status<200||xhr.status>=300){let detail='Upload or refresh failed';try{detail=JSON.parse(xhr.responseText).detail||detail;}catch{}reject(new Error(detail));return;}
+        try{consume();if(!terminal)throw new Error('Progress connection ended before completion. Refresh the collection to check the result.');if(terminal.stage==='error')throw new Error(terminal.message);resolve(terminal);}catch(error){reject(error);}
+      };
+      xhr.onerror=()=>reject(new Error('Connection lost. Server processing may continue; refresh the collection before retrying.'));
+      xhr.send(form);
+    });
+  }
+  function showIndexError(error){progressPanel.classList.add('error');uploadStatus.textContent='Could not finish';progressDetail.textContent=error.message;progressBar.max=1;progressBar.value=0;}
+  document.getElementById('reload').addEventListener('click',async()=>{
+    setIndexingBusy(true);startProgress('Refreshing reference collection');
+    try{await indexRequest('/api/reload?progress=true');await refreshDocuments();}catch(error){showIndexError(error);}finally{setIndexingBusy(false);}
+  });
+  document.getElementById('file-input').addEventListener('change',async event=>{
+    const files=[...event.target.files];if(!files.length)return;setIndexingBusy(true);let failed=0;let warnings=0;
+    try{
+      for(const [i,file] of files.entries()){
+        startProgress(`${file.name} (${i+1}/${files.length})`);
+        try{if(file.size>25*1024*1024)throw new Error('PDF must be 25 MB or smaller.');const form=new FormData();form.append('file',file);const result=await indexRequest('/api/documents?progress=true',form);warnings+=result.warnings||0;await refreshDocuments();}
+        catch(error){failed++;showIndexError(error);}
+      }
+      if(files.length>1){uploadStatus.textContent=`${files.length-failed} of ${files.length} documents indexed${failed?' · '+failed+' failed':''}${warnings?' · '+warnings+' warnings':''}`;if(failed)progressPanel.classList.add('error');}
+    }finally{event.target.value='';setIndexingBusy(false);}
+  });
+  refreshDocuments().catch(()=>{});
+</script>
+</body>
+</html>
