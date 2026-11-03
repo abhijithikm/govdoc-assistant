@@ -4,48 +4,59 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>GovDoc | Government Document Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+Malayalam:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    :root { color-scheme:light; --navy:#102a43; --ink:#243b53; --muted:#627d98; --line:#d9e2ec; --blue:#1261a6; --blue-dark:#0b4b82; --blue-soft:#eaf3fa; --surface:#fff; --canvas:#f3f7fa; --success:#19734c; }
+    :root { color-scheme:light; --navy:#09327b; --ink:#232f50; --muted:#5c6e93; --line:#e3ebf2; --blue-soft:#e7f6fd; --surface:#fff; --canvas:#f4f7fb; --success:#0f8a62; }
     * { box-sizing:border-box; }
-    body { margin:0; min-height:100vh; font:14px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; color:var(--ink); background:linear-gradient(135deg,#e9f1f7 0,#f7f9fb 48%,#e9f2f7 100%); }
-    .app { max-width:1440px; height:100dvh; margin:auto; padding:24px; display:grid; grid-template-columns:290px minmax(0,1fr); gap:20px; }
-    aside,.chat { background:var(--surface); border:1px solid var(--line); border-radius:18px; box-shadow:0 18px 46px rgba(27,57,87,.10); }
-    aside { padding:24px 20px 20px; display:flex; flex-direction:column; gap:20px; min-height:0; overflow:auto; }
-    .brand { display:flex; gap:12px; align-items:center; padding-bottom:20px; border-bottom:1px solid var(--line); }
-    .logo { display:grid; place-items:center; width:43px; height:43px; border-radius:10px; background:var(--navy); color:#fff; font-size:13px; font-weight:800; letter-spacing:.08em; }
-    h1 { color:var(--navy); font-size:18px; margin:0; letter-spacing:-.35px; } .sub { color:var(--muted); font-size:12px; margin-top:2px; }
-    .section-title { display:flex; justify-content:space-between; align-items:center; font-size:11px; text-transform:uppercase; letter-spacing:.11em; font-weight:800; color:#526d82; margin-bottom:11px; }
-    #doc-count { display:grid; place-items:center; min-width:23px; height:23px; border-radius:99px; background:var(--blue-soft); color:var(--blue-dark); font-size:11px; }
-    .doc-list { display:flex; flex-direction:column; gap:7px; max-height:42vh; overflow:auto; padding-right:2px; }
-    .doc { position:relative; padding:10px 10px 10px 28px; border:1px solid transparent; border-radius:8px; background:#f7fafc; color:#486581; font-size:13px; overflow-wrap:anywhere; }
-    .doc::before { content:'›'; position:absolute; left:11px; color:var(--blue); font-weight:800; }
-    .empty { color:var(--muted); font-size:13px; padding:12px 4px; }
-    .upload { border:1px dashed #9fb8ca; border-radius:10px; padding:13px 12px; text-align:center; color:var(--blue-dark); font-size:13px; font-weight:700; cursor:pointer; background:#f7fbfe; transition:.18s ease; }
-    .upload:hover { border-color:var(--blue); background:var(--blue-soft); transform:translateY(-1px); }
+    body { margin:0; min-height:100vh; font:15px/1.55 Manrope,"Noto Sans Malayalam","Segoe UI",sans-serif; color:var(--ink); background:
+      radial-gradient(880px 360px at 100% -10%, rgba(9,50,123,.07), transparent 60%),
+      var(--canvas); }
+    .app { height:100dvh; display:grid; grid-template-rows:68px minmax(0,1fr); }
+    .sitebar { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:0 24px; background:rgba(255,255,255,.92); border-bottom:1px solid var(--line); backdrop-filter:blur(10px); }
+    .brand { display:flex; align-items:center; gap:12px; min-width:0; }
+    .logo { display:grid; place-items:center; width:40px; height:40px; flex:none; border-radius:12px; background:var(--navy); color:#fff; font-size:13px; font-weight:800; letter-spacing:.02em; }
+    h1 { color:var(--navy); font-size:16px; line-height:1.2; margin:0; font-weight:800; } .sub { color:var(--muted); font-size:12px; line-height:1.3; margin-top:2px; }
+    .online { display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:#e8f6ef; color:var(--success); font-size:12px; font-weight:700; white-space:nowrap; }
+    .online::before { content:""; width:7px; height:7px; border-radius:50%; background:var(--success); }
+    .workspace { min-height:0; display:grid; grid-template-columns:300px minmax(0,1fr); }
+    aside { background:#fff; border-right:1px solid var(--line); padding:20px; display:flex; flex-direction:column; gap:16px; min-height:0; overflow:auto; }
+    .section-title { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:12px; text-transform:uppercase; letter-spacing:.08em; font-weight:800; color:var(--muted); margin-bottom:10px; }
+    #doc-count { display:grid; place-items:center; min-width:24px; height:24px; padding:0 6px; border-radius:99px; background:var(--blue-soft); color:var(--navy); font-size:12px; }
+    .doc-list { display:flex; flex-direction:column; gap:8px; max-height:42vh; overflow:auto; }
+    .doc { position:relative; padding:10px 10px 10px 28px; border:1px solid transparent; border-radius:10px; background:var(--canvas); color:var(--ink); font-size:13px; overflow-wrap:anywhere; }
+    .doc:hover { border-color:var(--line); background:#fff; }
+    .doc::before { content:""; position:absolute; left:12px; top:16px; width:6px; height:6px; border-radius:50%; background:var(--navy); }
+    .empty { color:var(--muted); font-size:13px; line-height:1.45; padding:18px 12px; text-align:center; border:1px dashed #c9d7e6; border-radius:12px; background:var(--canvas); }
+    .steps { list-style:none; padding:0; margin:18px auto 0; max-width:520px; display:grid; gap:8px; text-align:left; }
+    .steps li { background:#fff; border:1px solid var(--line); border-radius:12px; padding:10px 12px; color:var(--ink); font-size:14px; }
+    .steps b { color:var(--navy); }
+    .upload { display:flex; align-items:center; justify-content:center; min-height:46px; border:1px dashed #9ec5e6; border-radius:12px; padding:10px 12px; text-align:center; color:var(--navy); font-size:13px; font-weight:700; cursor:pointer; background:var(--blue-soft); }
+    .upload:hover { border-color:var(--navy); background:#dff3fb; }
     .upload input { display:none; }
-    button { border:0; border-radius:8px; padding:10px 14px; font:inherit; font-weight:700; cursor:pointer; transition:.18s ease; }
-    .secondary { width:100%; background:#eaf1f6; color:#36566f; }
-    .secondary:hover { background:#dce9f2; color:var(--navy); }
+    button { border:0; border-radius:10px; padding:10px 14px; font:inherit; font-weight:700; cursor:pointer; }
+    .secondary { width:100%; min-height:44px; background:#fff; color:var(--navy); border:1px solid #c9d7e6; }
+    .secondary:hover { border-color:var(--navy); background:var(--blue-soft); }
     .status { color:var(--muted); font-size:12px; min-height:18px; }
-    .chat { min-height:0; display:flex; flex-direction:column; min-width:0; overflow:hidden; }
-    .topbar { padding:19px 28px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; background:#fff; }
-    .topbar strong { color:var(--navy); font-size:16px; letter-spacing:-.2px; } .online { color:var(--success); font-size:12px; font-weight:700; }
-    .messages { flex:1; min-height:0; overflow:auto; padding:28px clamp(16px,3vw,40px); display:flex; flex-direction:column; gap:24px; background:#f8fafc; }
-    .welcome { margin:auto; max-width:620px; text-align:center; color:var(--muted); }
-    .welcome .big { display:grid; place-items:center; width:58px; height:58px; margin:0 auto 17px; border-radius:16px; background:var(--blue-soft); color:var(--blue-dark); font-size:32px; font-weight:300; } .welcome h2 { color:var(--navy); font-size:27px; letter-spacing:-.7px; margin:0 0 8px; }
-    .welcome p { margin:0; }
-    .suggestions { display:flex; flex-wrap:wrap; justify-content:center; gap:9px; margin-top:22px; }
-    .suggestion { padding:8px 12px; border:1px solid #c9dce9; border-radius:7px; background:#fff; color:var(--blue-dark); font-size:12px; font-weight:700; box-shadow:0 2px 4px #102a4308; }
-    .suggestion:hover { border-color:var(--blue); background:var(--blue-soft); }
-    .message { display:flex; gap:11px; width:100%; min-width:0; align-self:flex-start; }
-    .message.user { align-self:flex-end; flex-direction:row-reverse; width:auto; max-width:90%; }
-    .avatar { width:31px; height:31px; flex:none; border-radius:50%; display:grid; place-items:center; background:var(--navy); color:#fff; font-size:10px; font-weight:800; }
-    .user .avatar { background:#dceee5; color:var(--success); }
-    .bubble { padding:18px 20px; min-width:0; max-width:100%; flex:1; border:1px solid var(--line); border-radius:3px 12px 12px; background:#fff; box-shadow:0 3px 10px rgba(27,57,87,.05); overflow-wrap:anywhere; line-height:1.75; }
-    .user .bubble { border:0; border-radius:12px 3px 12px 12px; background:var(--navy); color:#fff; box-shadow:none; }
+    .chat { min-height:0; min-width:0; display:flex; flex-direction:column; background:var(--canvas); }
+    .messages { flex:1; min-height:0; overflow:auto; padding:28px 24px; display:flex; flex-direction:column; align-items:center; gap:18px; }
+    .welcome { width:min(680px,100%); margin:auto; text-align:center; color:var(--muted); }
+    .welcome .big { display:grid; place-items:center; width:56px; height:56px; margin:0 auto 16px; border-radius:16px; background:var(--navy); color:#fff; font-size:15px; font-weight:800; box-shadow:0 12px 28px rgba(9,50,123,.18); }
+    .welcome h2 { color:var(--navy); font-size:32px; font-weight:800; letter-spacing:-.5px; margin:0 0 8px; }
+    .welcome p { margin:0 auto; max-width:46ch; }
+    .suggestions { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:22px; }
+    .suggestion { min-height:38px; padding:8px 14px; border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--navy); font-size:13px; font-weight:700; box-shadow:0 1px 2px rgba(9,50,123,.04); }
+    .suggestion:hover { border-color:var(--navy); background:var(--blue-soft); }
+    .message { display:flex; align-items:flex-start; gap:12px; width:min(760px,100%); min-width:0; }
+    .message.user { flex-direction:row-reverse; }
+    .avatar { width:32px; height:32px; flex:none; border-radius:50%; display:grid; place-items:center; background:var(--navy); color:#fff; font-size:11px; font-weight:800; }
+    .user .avatar { background:var(--blue-soft); color:var(--navy); }
+    .bubble { padding:14px 16px; min-width:0; flex:1; border:1px solid var(--line); border-radius:14px; background:#fff; box-shadow:0 8px 20px rgba(9,50,123,.04); overflow-wrap:anywhere; line-height:1.65; }
+    .user .bubble { flex:0 1 auto; max-width:85%; border:0; background:var(--navy); color:#fff; box-shadow:0 8px 18px rgba(9,50,123,.16); }
     .bubble p { margin:0 0 10px; } .bubble p:last-child { margin-bottom:0; }
-    .bubble ul,.bubble ol { margin:12px 0; padding-left:24px; } .bubble li { padding-left:3px; } .bubble li + li { margin-top:8px; }
-    .bubble h2,.bubble h3,.bubble h4 { color:var(--navy); line-height:1.35; margin:20px 0 10px; font-size:16px; }
+    .bubble ul,.bubble ol { margin:12px 0; padding-left:22px; } .bubble li + li { margin-top:8px; }
+    .bubble h2,.bubble h3,.bubble h4 { color:var(--navy); line-height:1.35; margin:16px 0 8px; font-size:16px; }
     .bubble > :first-child { margin-top:0; }
     .bubble code { background:#edf2f7; padding:2px 5px; border-radius:4px; font-size:12px; }
     .bubble pre { overflow:auto; padding:12px; background:#edf2f7; border-radius:8px; white-space:pre; }
@@ -54,35 +65,55 @@
     .bubble table { width:100%; border-collapse:collapse; font-size:13px; }
     .bubble th,.bubble td { text-align:left; padding:9px 12px; border:1px solid var(--line); vertical-align:top; }
     .bubble th { background:var(--blue-soft); color:var(--navy); }
-    .bubble a { color:var(--blue); }
-    .source-chip { display:inline-block; margin:5px 6px 0 0; padding:5px 9px; background:#edf4fa; border-radius:6px; font-weight:500; }
-    .progress-panel { background:#f5f9fc; border:1px solid var(--line); padding:12px; border-radius:10px; font-size:12px; }
+    .bubble a { color:#1d5d90; }
+    .source-chip { display:inline-block; margin:6px 6px 0 0; padding:5px 8px; background:var(--blue-soft); color:var(--navy); border-radius:6px; font-weight:700; }
+    .progress-panel { background:var(--canvas); border:1px solid var(--line); padding:12px; border-radius:10px; font-size:12px; }
     .progress-panel[hidden] { display:none; }
     .progress-panel strong { display:block; overflow-wrap:anywhere; color:var(--navy); margin-bottom:6px; }
-    .progress-panel progress { width:100%; height:8px; accent-color:var(--blue); display:block; margin:10px 0; }
+    .progress-panel progress { width:100%; height:8px; accent-color:var(--navy); display:block; margin:10px 0; }
     .progress-panel.error { border-color:#ce6767; }
     .progress-panel ul { padding-left:16px; color:#8c5510; max-height:100px; overflow:auto; }
     button:disabled,.upload:has(input:disabled) { opacity:.55; cursor:wait; }
     .user .bubble { white-space:pre-wrap; }
-    .citations { color:#527087; font-size:11px; font-weight:650; line-height:1.55; margin-top:9px; padding-top:8px; border-top:1px solid #e7eef3; overflow-wrap:anywhere; }
-    .composer-wrap { padding:17px clamp(24px,5vw,76px) 21px; border-top:1px solid var(--line); background:#fff; }
-    .composer { display:flex; gap:10px; align-items:flex-end; border:1px solid #b7c9d8; border-radius:10px; padding:6px 6px 6px 10px; box-shadow:0 4px 13px rgba(27,57,87,.06); transition:border .18s ease,box-shadow .18s ease; }
-    .composer:focus-within { border-color:var(--blue); box-shadow:0 0 0 3px #1261a61c; }
-    textarea { resize:none; flex:1; border:0; outline:0; padding:9px 6px; font:inherit; color:var(--ink); max-height:140px; min-height:42px; }
-    .send { background:var(--blue); color:white; min-width:78px; height:42px; } .send:hover { background:var(--blue-dark); } .send:disabled { opacity:.55; cursor:wait; }
-    .hint { text-align:center; color:#829ab1; font-size:11px; padding-top:9px; }
-    @media(max-width:800px) { .app { padding:0; display:flex; flex-direction:column; gap:0; } aside { border-radius:0; border-width:0 0 1px; padding:12px 16px; gap:10px; max-height:42dvh; flex-shrink:0; } .brand { display:none; } .section-title { margin:0; } .doc-list { max-height:60px; flex-direction:row; } .doc { white-space:nowrap; } .upload { padding:9px; } .aside-bottom { display:none; } .chat { border:0; border-radius:0; min-height:0; flex:1; } .topbar { padding:12px 16px; } .topbar strong { font-size:13px; } .messages { padding:16px 10px; } .composer-wrap { padding:12px 16px 15px; } .bubble { padding:13px; } .avatar { display:none; } }
+    .user .bubble a,.user .bubble h2,.user .bubble h3,.user .bubble h4 { color:#fff; }
+    .citations { color:var(--muted); font-size:12px; font-weight:700; line-height:1.5; margin-top:10px; padding-top:8px; border-top:1px solid var(--line); overflow-wrap:anywhere; }
+    .composer-wrap { border-top:1px solid var(--line); background:#fff; padding:14px 24px 16px; }
+    .composer-inner { width:min(760px,100%); margin:0 auto; }
+    .composer { display:flex; align-items:flex-end; gap:8px; border:1px solid #d5e0ea; border-radius:16px; padding:6px 6px 6px 8px; background:#fff; box-shadow:0 10px 28px rgba(9,50,123,.06); }
+    .composer:focus-within { border-color:var(--navy); box-shadow:0 0 0 4px #09327b18, 0 10px 28px rgba(9,50,123,.06); }
+    textarea { resize:none; flex:1; border:0; outline:0; padding:10px 8px; font:inherit; color:var(--ink); max-height:140px; min-height:44px; background:transparent; }
+    textarea::placeholder { color:#8aa0b8; }
+    .send { min-width:88px; height:44px; border-radius:12px; color:#fff; background:#e83a7a; }
+    .send:hover { background:#d42d6c; } .send:disabled { opacity:.55; cursor:wait; }
+    .hint { text-align:center; color:var(--muted); font-size:12px; padding-top:8px; }
+    @media(max-width:800px) {
+      .app { grid-template-rows:60px minmax(0,1fr); }
+      .sitebar { padding:0 16px; }
+      .sub { display:none; }
+      .workspace { grid-template-columns:1fr; grid-template-rows:auto minmax(0,1fr); }
+      aside { border-right:0; border-bottom:1px solid var(--line); padding:12px 16px; gap:10px; max-height:38dvh; }
+      .doc-list { max-height:72px; flex-direction:row; }
+      .doc { white-space:nowrap; }
+      .aside-bottom { display:none; }
+      .messages { padding:16px; }
+      .composer-wrap { padding:12px 16px 14px; }
+      .avatar { display:none; }
+    }
   </style>
 </head>
 <body>
   <div class="app">
+    <header class="sitebar">
+      <div class="brand"><div class="logo">GD</div><div><h1>GovDoc</h1><div class="sub">Ask questions about your PDFs</div></div></div>
+      <span class="online">Ready</span>
+    </header>
+    <div class="workspace">
     <aside>
-      <div class="brand"><div class="logo">GD</div><div><h1>GovDoc</h1><div class="sub">Government document assistance</div></div></div>
       <div>
-        <div class="section-title"><span>Reference collection</span><span id="doc-count">0</span></div>
-        <div class="doc-list" id="documents"><div class="empty">No reference materials yet</div></div>
+        <div class="section-title"><span>Your PDFs</span><span id="doc-count">0</span></div>
+        <div class="doc-list" id="documents"><div class="empty">No PDFs yet. Upload one to ask questions about it.</div></div>
       </div>
-      <label class="upload">Add reference document<input id="file-input" type="file" accept="application/pdf,.pdf" multiple></label>
+      <label class="upload">Upload a PDF<input id="file-input" type="file" accept="application/pdf,.pdf" multiple></label>
       <div class="progress-panel" id="upload-progress" hidden aria-live="polite">
         <strong id="progress-file"></strong>
         <div class="status" id="upload-status"></div>
@@ -91,20 +122,22 @@
         <ul id="progress-warnings" hidden></ul>
       </div>
       <div class="aside-bottom" style="margin-top:auto">
-        <button class="secondary" id="reload">Refresh documents</button>
-        <div class="sub" style="margin-top:14px">Document-based answers include source references.</div>
+        <button class="secondary" id="reload">Reload the list</button>
+        <div class="sub" style="margin-top:14px">Answers that use a PDF show the file name and page.</div>
       </div>
     </aside>
     <main class="chat">
-      <header class="topbar"><strong>Government Document Assistant</strong><span class="online">● &nbsp;Ready</span></header>
       <section class="messages" id="messages" aria-live="polite">
-        <div class="welcome" id="welcome"><div class="big">⌁</div><h2>How can we assist?</h2><p>Ask a general question or search the document collection for a source-referenced answer.</p><div class="suggestions" aria-label="Example questions"><button class="suggestion" type="button" data-question="Give me a simple productivity tip.">General assistance</button><button class="suggestion" type="button" data-question="What information should I prepare before applying for a public service?">Application preparation</button><button class="suggestion" type="button" data-question="What details make a public-records request easier to process?">Records requests</button><button class="suggestion" type="button" data-question="What should a household emergency plan include?">Emergency planning</button></div></div>
+        <div class="welcome" id="welcome"><div class="big">GD</div><h2>Ask a question</h2><p>Upload a PDF on the left, then ask about it here. You can also ask a general question with no document.</p><ol class="steps"><li><b>1. Upload.</b> Add a PDF. Scanned Malayalam and English pages can be read.</li><li><b>2. Ask.</b> Type below, or choose an example. Follow-up questions stay in this chat.</li><li><b>3. Check the source.</b> When an answer comes from a PDF, the file name and page appear under it.</li></ol><div class="suggestions" aria-label="Example questions"><button class="suggestion" type="button" data-question="What information should I prepare before applying for a public service?">What should I prepare before I apply?</button><button class="suggestion" type="button" data-question="What details make a public-records request easier to process?">What helps a records request?</button><button class="suggestion" type="button" data-question="What should a household emergency plan include?">What goes in an emergency plan?</button></div></div>
       </section>
       <div class="composer-wrap">
-        <form class="composer" id="chat-form"><textarea id="question" rows="1" placeholder="Enter a question or document-related request…" required></textarea><button class="send" id="send" type="submit">Send</button></form>
-        <div class="hint">Answers based on reference documents include source citations.</div>
+        <div class="composer-inner">
+          <form class="composer" id="chat-form"><textarea id="question" rows="1" placeholder="Type your question" required></textarea><button class="send" id="send" type="submit">Send</button></form>
+          <div class="hint">Press Enter to send. Shift+Enter starts a new line.</div>
+        </div>
       </div>
     </main>
+    </div>
   </div>
 <script>
   const messagesEl = document.getElementById('messages');
@@ -177,7 +210,7 @@
     const res = await fetch('/api/documents'); const data = await res.json();
     const box = document.getElementById('documents'); box.replaceChildren();
     document.getElementById('doc-count').textContent = data.documents.length;
-    if (!data.documents.length) { const empty=document.createElement('div'); empty.className='empty'; empty.textContent='No reference materials yet'; box.append(empty); }
+    if (!data.documents.length) { const empty=document.createElement('div'); empty.className='empty'; empty.textContent='No PDFs yet. Upload one to ask questions about it.'; box.append(empty); }
     else if (!data.passages) { const empty=document.createElement('div'); empty.className='empty'; empty.textContent='Reference materials found, but their text could not be read.'; box.append(empty); }
     document.querySelector('.online').textContent = data.passages ? '●  Documents ready' : '●  No documents indexed';
     data.documents.forEach(name => { const item=document.createElement('div'); item.className='doc'; item.textContent=name.replace(/\.pdf$/i,''); box.append(item); });
