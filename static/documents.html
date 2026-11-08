@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GovDoc | Documents</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <div class="shell docs">
+    <header class="site-header">
+      <a class="brand" href="/">
+        <div class="logo">GD</div>
+        <div><h1>GovDoc</h1><div class="sub">Government document assistance</div></div>
+      </a>
+      <nav class="nav" aria-label="Primary">
+        <a href="/">Assistant</a>
+        <a href="/documents" aria-current="page">Documents</a>
+        <a href="/upload">Upload</a>
+      </nav>
+    </header>
+    <main class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>Reference collection</h2>
+          <p>These PDFs are searched when an answer includes a source. Add a file on the Upload page.</p>
+        </div>
+        <div class="sub" id="collection-status">Checking collection…</div>
+      </div>
+      <div class="doc-tools">
+        <a class="link-button" href="/upload">Upload a PDF</a>
+        <button class="secondary" id="reload" type="button">Refresh documents</button>
+      </div>
+      <div class="progress-panel" id="upload-progress" hidden aria-live="polite">
+        <strong id="progress-file"></strong>
+        <div class="status" id="upload-status"></div>
+        <progress id="progress-bar" max="100" aria-label="Document processing progress"></progress>
+        <div id="progress-detail"></div>
+        <ul id="progress-warnings" hidden></ul>
+      </div>
+      <div class="section-title"><span>Documents</span><span id="doc-count">0</span></div>
+      <div class="doc-list" id="documents"><div class="empty">No reference materials yet</div></div>
+    </main>
+  </div>
+  <script src="/static/documents.js"></script>
+</body>
+</html>
