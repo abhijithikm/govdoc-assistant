@@ -15,31 +15,40 @@
       </a>
       <nav class="nav" aria-label="Primary">
         <a href="/">Assistant</a>
-        <a href="/documents" aria-current="page">Documents</a>
-        <a href="/upload">Upload</a>
+        <a href="/" aria-current="page">Documents</a>
       </nav>
     </header>
-    <main class="panel">
-      <div class="panel-head">
+    <main class="panel docs-page">
+      <header class="docs-hero">
         <div>
-          <h2>Reference collection</h2>
-          <p>These PDFs are searched when an answer includes a source. Add a file on the Upload page.</p>
+          <p class="docs-kicker">Library</p>
+          <h2 id="collection-heading">Reference collection</h2>
+          <p class="docs-lede">These PDFs are searched when an answer includes a source.</p>
+          <p class="docs-status" id="collection-status">Checking collection…</p>
         </div>
-        <div class="sub" id="collection-status">Checking collection…</div>
-      </div>
-      <div class="doc-tools">
-        <a class="link-button" href="/upload">Upload a PDF</a>
-        <button class="secondary" id="reload" type="button">Refresh documents</button>
-      </div>
-      <div class="progress-panel" id="upload-progress" hidden aria-live="polite">
-        <strong id="progress-file"></strong>
-        <div class="status" id="upload-status"></div>
-        <progress id="progress-bar" max="100" aria-label="Document processing progress"></progress>
-        <div id="progress-detail"></div>
-        <ul id="progress-warnings" hidden></ul>
-      </div>
-      <div class="section-title"><span>Documents</span><span id="doc-count">0</span></div>
-      <div class="doc-list" id="documents"><div class="empty">No reference materials yet</div></div>
+        <div class="docs-stat">
+          <strong id="doc-count">0</strong>
+          <span>in the library</span>
+        </div>
+      </header>
+      <section class="reference-collection" aria-labelledby="collection-heading">
+        <div class="doc-list" id="documents"><div class="empty">No reference materials yet</div></div>
+      </section>
+      <section class="upload-panel" aria-labelledby="upload-heading">
+        <div>
+          <h3 id="upload-heading">Add reference document</h3>
+          <p>PDF only, up to 25 MB. Scanned Malayalam and English pages can be read.</p>
+        </div>
+        <label class="upload">Choose a PDF<input class="file-input" type="file" accept="application/pdf,.pdf" multiple></label>
+        <div class="progress-panel" hidden aria-live="polite">
+          <strong class="progress-file"></strong>
+          <div class="status upload-status"></div>
+          <progress class="progress-bar" max="100" aria-label="Document processing progress"></progress>
+          <div class="progress-detail"></div>
+          <ul class="progress-warnings" hidden></ul>
+        </div>
+        <button class="secondary reload" type="button">Refresh documents</button>
+      </section>
     </main>
   </div>
   <script src="/static/documents.js"></script>

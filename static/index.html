@@ -14,11 +14,11 @@
         <div><h1>GovDoc</h1><div class="sub">Government document assistance</div></div>
       </a>
       <nav class="nav" aria-label="Primary">
-        <a href="/" aria-current="page">Assistant</a>
-        <a href="/documents">Documents</a>
-        <a href="/upload">Upload</a>
+        <button type="button" data-view="assistant" aria-current="page">Assistant</button>
+        <button type="button" data-view="documents">Documents</button>
       </nav>
     </header>
+    <div class="workspace" id="assistant-view">
     <main class="chat">
       <header class="topbar"><strong>Government Document Assistant</strong><span class="online">● &nbsp;Ready</span></header>
       <section class="messages" id="messages" aria-live="polite">
@@ -26,10 +26,58 @@
       </section>
       <div class="composer-wrap">
         <form class="composer" id="chat-form"><textarea id="question" rows="1" placeholder="Enter a question or document-related request…" required></textarea><button class="send" id="send" type="submit">Send</button></form>
-        <div class="hint">Answers based on reference documents include source citations. Add PDFs on the Upload page.</div>
+        <div class="hint">Answers based on reference documents include source citations.</div>
       </div>
     </main>
+    </div>
+    <main class="panel docs-page" id="documents-view" hidden>
+      <header class="docs-hero">
+        <div>
+          <p class="docs-kicker">Library</p>
+          <h2 id="collection-heading">Reference collection</h2>
+          <p class="docs-lede">These PDFs are searched when an answer includes a source.</p>
+          <p class="docs-status" id="collection-status">Checking collection…</p>
+        </div>
+        <div class="docs-stat">
+          <strong id="doc-count">0</strong>
+          <span>in the library</span>
+        </div>
+      </header>
+      <section class="reference-collection" aria-labelledby="collection-heading">
+        <div class="doc-list" id="documents"><div class="empty">No reference materials yet</div></div>
+      </section>
+      <section class="upload-panel" aria-labelledby="upload-heading">
+        <div>
+          <h3 id="upload-heading">Add reference document</h3>
+          <p>PDF only, up to 25 MB. Scanned Malayalam and English pages can be read.</p>
+        </div>
+        <label class="upload">Choose a PDF<input class="file-input" type="file" accept="application/pdf,.pdf" multiple></label>
+        <div class="progress-panel" hidden aria-live="polite">
+          <strong class="progress-file"></strong>
+          <div class="status upload-status"></div>
+          <progress class="progress-bar" max="100" aria-label="Document processing progress"></progress>
+          <div class="progress-detail"></div>
+          <ul class="progress-warnings" hidden></ul>
+        </div>
+        <button class="secondary reload" type="button">Refresh documents</button>
+      </section>
+    </main>
   </div>
+  <script src="/static/documents.js"></script>
+  <script>
+    function showView(name) {
+      document.getElementById('assistant-view').hidden = name !== 'assistant';
+      document.getElementById('documents-view').hidden = name !== 'documents';
+      document.querySelectorAll('[data-view]').forEach(tab => {
+        if (tab.dataset.view === name) tab.setAttribute('aria-current', 'page');
+        else tab.removeAttribute('aria-current');
+      });
+      if (name === 'documents' && typeof refreshDocuments === 'function') refreshDocuments().catch(() => {});
+    }
+    document.querySelectorAll('[data-view]').forEach(tab => {
+      tab.addEventListener('click', () => showView(tab.dataset.view));
+    });
+  </script>
   <script src="/static/chat.js"></script>
 </body>
 </html>

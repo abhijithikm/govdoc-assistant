@@ -17,28 +17,40 @@ async function refreshDocuments() {
   }
   data.documents.forEach(name => { const item = document.createElement('div'); item.className = 'doc'; item.textContent = name.replace(/\.pdf$/i, ''); box.append(item); });
 }
-const progressPanel = document.getElementById('upload-progress');
-const progressBar = document.getElementById('progress-bar');
-const uploadStatus = document.getElementById('upload-status');
-const progressDetail = document.getElementById('progress-detail');
+function readUploadPanel(root) {
+  return {
+    fileInput: root.querySelector('.file-input') || root.querySelector('#file-input'),
+    reload: root.querySelector('.reload') || root.querySelector('#reload'),
+    progressPanel: root.querySelector('.progress-panel'),
+    progressBar: root.querySelector('.progress-bar'),
+    uploadStatus: root.querySelector('.upload-status'),
+    progressDetail: root.querySelector('.progress-detail'),
+    progressFile: root.querySelector('.progress-file'),
+    warnings: root.querySelector('.progress-warnings'),
+  };
+}
+const panels = [...document.querySelectorAll('.upload-panel')].map(readUploadPanel);
+let active = panels[0] || null;
 function setIndexingBusy(busy) {
-  const fileInput = document.getElementById('file-input');
-  const reload = document.getElementById('reload');
-  if (fileInput) fileInput.disabled = busy;
-  if (reload) reload.disabled = busy;
-  if (progressPanel) progressPanel.setAttribute('aria-busy', String(busy));
+  panels.forEach(panel => {
+    if (panel.fileInput) panel.fileInput.disabled = busy;
+    if (panel.reload) panel.reload.disabled = busy;
+    if (panel.progressPanel) panel.progressPanel.setAttribute('aria-busy', String(busy));
+  });
 }
 function startProgress(name) {
+  const { progressPanel, progressFile, uploadStatus, progressDetail, progressBar, warnings } = active;
   progressPanel.hidden = false; progressPanel.classList.remove('error');
-  document.getElementById('progress-file').textContent = name;
+  progressFile.textContent = name;
   uploadStatus.textContent = 'Preparing…'; progressDetail.textContent = ''; progressBar.removeAttribute('value');
-  const warnings = document.getElementById('progress-warnings'); warnings.replaceChildren(); warnings.hidden = true;
+  warnings.replaceChildren(); warnings.hidden = true;
 }
 function showProgress(event) {
+  const { progressPanel, progressFile, uploadStatus, progressDetail, progressBar, warnings } = active;
   if (event.stage === 'heartbeat') return;
-  if (event.file) document.getElementById('progress-file').textContent = event.file;
+  if (event.file) progressFile.textContent = event.file;
   if (event.stage === 'warning') {
-    const warnings = document.getElementById('progress-warnings'); warnings.hidden = false;
+    warnings.hidden = false;
     const item = document.createElement('li'); item.textContent = `${event.file || ''}${event.page ? ' · page ' + event.page : ''}: ${event.message}`; warnings.append(item); return;
   }
   const labels = { uploaded: 'Upload complete · preparing extraction', document: 'Reading document', extracting: 'Extracting text', ocr: 'Recognizing scanned text (OCR)', translating: 'Translating to English', indexing: 'Building searchable passages', page_complete: 'Page indexed', saving: 'Saving search index', complete: 'Ready to search', error: 'Processing failed' };
@@ -54,8 +66,8 @@ function indexRequest(url, form = null) {
     const xhr = new XMLHttpRequest(); let offset = 0; let pending = ''; let terminal = null;
     xhr.open('POST', url); xhr.setRequestHeader('Accept', 'application/x-ndjson');
     if (form) {
-      xhr.upload.onprogress = e => { if (e.lengthComputable) { progressBar.max = e.total; progressBar.value = e.loaded; uploadStatus.textContent = `Uploading · ${Math.round(e.loaded / e.total * 100)}%`; } };
-      xhr.upload.onload = () => { uploadStatus.textContent = 'Upload sent · waiting for extraction'; progressBar.removeAttribute('value'); };
+      xhr.upload.onprogress = e => { if (e.lengthComputable) { active.progressBar.max = e.total; active.progressBar.value = e.loaded; active.uploadStatus.textContent = `Uploading · ${Math.round(e.loaded / e.total * 100)}%`; } };
+      xhr.upload.onload = () => { active.uploadStatus.textContent = 'Upload sent · waiting for extraction'; active.progressBar.removeAttribute('value'); };
     }
     const consume = () => {
       pending += xhr.responseText.slice(offset); offset = xhr.responseText.length;
@@ -70,7 +82,7 @@ function indexRequest(url, form = null) {
     xhr.send(form);
   });
 }
-function showIndexError(error) { progressPanel.classList.add('error'); uploadStatus.textContent = 'Could not finish'; progressDetail.textContent = error.message; progressBar.max = 1; progressBar.value = 0; }
+function showIndexError(error) { const { progressPanel, uploadStatus, progressDetail, progressBar } = active; progressPanel.classList.add('error'); uploadStatus.textContent = 'Could not finish'; progressDetail.textContent = error.message; progressBar.max = 1; progressBar.value = 0; }
 async function uploadFiles(files) {
   if (!files.length) return;
   setIndexingBusy(true); let failed = 0; let warnings = 0;
@@ -86,30 +98,33 @@ async function uploadFiles(files) {
         await refreshDocuments();
       } catch (error) { failed++; showIndexError(error); }
     }
-    if (files.length > 1) { uploadStatus.textContent = `${files.length - failed} of ${files.length} documents indexed${failed ? ' · ' + failed + ' failed' : ''}${warnings ? ' · ' + warnings + ' warnings' : ''}`; if (failed) progressPanel.classList.add('error'); }
+    if (files.length > 1) { active.uploadStatus.textContent = `${files.length - failed} of ${files.length} documents indexed${failed ? ' · ' + failed + ' failed' : ''}${warnings ? ' · ' + warnings + ' warnings' : ''}`; if (failed) active.progressPanel.classList.add('error'); }
   } finally { setIndexingBusy(false); }
 }
-const reloadButton = document.getElementById('reload');
-if (reloadButton && progressPanel) {
-  reloadButton.addEventListener('click', async () => {
-    setIndexingBusy(true); startProgress('Refreshing reference collection');
-    try { await indexRequest('/api/reload?progress=true'); await refreshDocuments(); } catch (error) { showIndexError(error); } finally { setIndexingBusy(false); }
-  });
-}
-const fileInput = document.getElementById('file-input');
-if (fileInput) {
-  fileInput.addEventListener('change', async event => {
-    const files = [...event.target.files];
-    try { await uploadFiles(files); } finally { event.target.value = ''; }
-  });
-}
-const dropzone = document.getElementById('dropzone');
-if (dropzone) {
-  dropzone.addEventListener('dragover', event => { event.preventDefault(); dropzone.classList.add('drag'); });
-  dropzone.addEventListener('dragleave', event => { if (!dropzone.contains(event.relatedTarget)) dropzone.classList.remove('drag'); });
-  dropzone.addEventListener('drop', async event => {
-    event.preventDefault(); dropzone.classList.remove('drag');
-    await uploadFiles([...event.dataTransfer.files]);
-  });
-}
+panels.forEach(panel => {
+  if (panel.reload && panel.progressPanel) {
+    panel.reload.addEventListener('click', async () => {
+      active = panel;
+      setIndexingBusy(true); startProgress('Refreshing reference collection');
+      try { await indexRequest('/api/reload?progress=true'); await refreshDocuments(); } catch (error) { showIndexError(error); } finally { setIndexingBusy(false); }
+    });
+  }
+  if (panel.fileInput) {
+    panel.fileInput.addEventListener('change', async event => {
+      active = panel;
+      const files = [...event.target.files];
+      try { await uploadFiles(files); } finally { event.target.value = ''; }
+    });
+  }
+  const dropzone = panel.fileInput && panel.fileInput.closest('.dropzone');
+  if (dropzone) {
+    dropzone.addEventListener('dragover', event => { event.preventDefault(); dropzone.classList.add('drag'); });
+    dropzone.addEventListener('dragleave', event => { if (!dropzone.contains(event.relatedTarget)) dropzone.classList.remove('drag'); });
+    dropzone.addEventListener('drop', async event => {
+      event.preventDefault(); dropzone.classList.remove('drag');
+      active = panel;
+      await uploadFiles([...event.dataTransfer.files]);
+    });
+  }
+});
 refreshDocuments().catch(() => {});
