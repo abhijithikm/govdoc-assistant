@@ -11,7 +11,11 @@ model to answer with PDF filename and page citations.
 Files
 -----
 app.py             FastAPI server, chat API, PDF uploads and retrieval logic
-static/index.html  Browser chat interface
+static/index.html      Browser chat page
+static/documents.html Documents page (upload, refresh, collection)
+static/app.css        Shared page styles
+static/chat.js        Chat page behavior
+static/documents.js   Documents page behavior
 data/              Put PDF documents here (not committed to Git)
 .env               Local API configuration (keep private; not committed)
 .env.example       Safe configuration template
@@ -41,8 +45,9 @@ Setup (Linux/macOS)
 Use
 ---
 Type a question and press Enter. Answers include citations such as
-[biology-notes.pdf, p. 4]. Use Add PDF documents to upload PDFs through the
-browser, or place them in data/ and click Refresh library. Stop the server
+[biology-notes.pdf, p. 4]. Open Documents to see the reference collection
+and use Add reference document to upload PDFs, or place files in data/ and
+click Refresh documents. Stop the server
 with Ctrl+C in the terminal.
 
 Server deployment and upgrades (Ubuntu/Debian)
@@ -124,7 +129,9 @@ Upload and extraction progress
   The search index is replaced atomically to preserve the last saved index if a
   write fails. On connection loss, processing may continue on the server. Refresh
   the collection before retrying; progress streams are not resumable after restart.
-- After updating static/index.html, hard-refresh the browser to load the new UI.
+- After updating files in static/, hard-refresh the browser to load the new UI.
+  The assistant and the Documents tab are both on /. The Documents tab
+  shows the reference collection without leaving the page.
 
 NVIDIA answers and display
 --------------------------

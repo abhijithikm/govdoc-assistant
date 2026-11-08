@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GovDoc | Documents</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <div class="shell docs">
+    <header class="site-header">
+      <a class="brand" href="/">
+        <div class="logo">GD</div>
+        <div><h1>GovDoc</h1><div class="sub">Government document assistance</div></div>
+      </a>
+      <nav class="nav" aria-label="Primary">
+        <a href="/">Assistant</a>
+        <a href="/" aria-current="page">Documents</a>
+      </nav>
+    </header>
+    <main class="panel docs-page">
+      <header class="docs-hero">
+        <div>
+          <p class="docs-kicker">Library</p>
+          <h2 id="collection-heading">Reference collection</h2>
+          <p class="docs-lede">These PDFs are searched when an answer includes a source.</p>
+          <p class="docs-status" id="collection-status">Checking collection…</p>
+        </div>
+        <div class="docs-stat">
+          <strong id="doc-count">0</strong>
+          <span>in the library</span>
+        </div>
+      </header>
+      <section class="reference-collection" aria-labelledby="collection-heading">
+        <div class="doc-list" id="documents"><div class="empty">No reference materials yet</div></div>
+      </section>
+      <section class="upload-panel" aria-labelledby="upload-heading">
+        <div>
+          <h3 id="upload-heading">Add reference document</h3>
+          <p>PDF only, up to 25 MB. Scanned Malayalam and English pages can be read.</p>
+        </div>
+        <label class="upload">Choose a PDF<input class="file-input" type="file" accept="application/pdf,.pdf" multiple></label>
+        <div class="progress-panel" hidden aria-live="polite">
+          <strong class="progress-file"></strong>
+          <div class="status upload-status"></div>
+          <progress class="progress-bar" max="100" aria-label="Document processing progress"></progress>
+          <div class="progress-detail"></div>
+          <ul class="progress-warnings" hidden></ul>
+        </div>
+        <button class="secondary reload" type="button">Refresh documents</button>
+      </section>
+    </main>
+  </div>
+  <script src="/static/documents.js"></script>
+</body>
+</html>

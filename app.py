@@ -22,7 +22,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, HTTPException, UploadFile
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, RedirectResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from openai import OpenAI
 from pydantic import BaseModel, Field
 from pypdf import PdfReader
@@ -642,9 +643,23 @@ def startup() -> None:
     passages = load_search_index() or load_passages()
 
 
+def browser_page(name: str) -> FileResponse:
+    return FileResponse(WEB_DIR / name, headers={"Cache-Control": "no-cache"})
+
+
 @app.get("/")
 def home() -> FileResponse:
-    return FileResponse(WEB_DIR / "index.html")
+    return browser_page("index.html")
+
+
+@app.get("/documents")
+def documents_page() -> FileResponse:
+    return browser_page("index.html")
+
+
+@app.get("/upload")
+def upload_page() -> RedirectResponse:
+    return RedirectResponse(url="/documents", status_code=307)
 
 
 @app.get("/api/documents")
@@ -763,3 +778,6 @@ def reload_documents(progress: bool = False):
         passages = load_passages(report)
         return {"documents": document_names_by_upload(), "passages": len(passages)}
     return indexing_response(action, progress)
+
+
+app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")

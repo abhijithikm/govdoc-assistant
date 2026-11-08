@@ -14,6 +14,6 @@ mkdir -p data          # put PDFs here; this folder is not in Git
 uvicorn app:app --reload
 ```
 
-Open http://127.0.0.1:8000. You can also upload PDFs from the page.
+Open http://127.0.0.1:8000. Upload PDFs from the Documents tab.
 
 See `documentation.txt` for server deployment, indexing, and limits.
